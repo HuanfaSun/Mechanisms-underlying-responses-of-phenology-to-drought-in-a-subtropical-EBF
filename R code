@@ -1,1 +1,389 @@
+第二章
+1. 使用线性混合模型对比优势物种的物候期差异，其中物种为固定效应，年份和采样个体为随机效应。
+
+# 加载必要的R包 -----------------------------------------------------------------------------------------------
+library(lme4)
+library(lmerTest)
+library(car)
+
+# 数据结构 ---------------------------------------------------------------------------------------------------------
+# phenology: 物候期（数值型变量，如开始和结束展叶的时间、开始和结束落叶的时间）
+# species: 物种名称（因子型变量，作为固定效应）
+# year: 观测年份（因子型变量，作为随机效应）
+# individual: 采样个体编号（因子型变量，作为随机效应）
+
+# 线性混合模型构建 ---------------------------------------------------------------------------------------------
+model <- lmer(
+  phenology ~ species +  # 固定效应：物种
+  (1 | year) + (1 | individual),  # 随机效应：年份和个体
+  data = data,
+  REML = TRUE)
+
+# 显著性检验，使用III型方差分析（Type III ANOVA） ----------------------------------------------
+Anova(model, type = "III")
+
+第三章
+1. 使用线性混合模型探究干旱处理以及其与年份、水文季节、月份的交互作用对空气温度、土壤湿度和冠层结构（非叶片斑块数量、非叶片斑块平均面积和非叶片斑块总面积）的影响，其中干旱处理为固定效应，实验样方区组和日期为随机效应。
+
+# 加载必要的R包 -----------------------------------------------------------------------------------------------
+library(lme4)
+library(lmerTest)
+library(car)
+library(sjPlot)
+
+# 数据结构 ---------------------------------------------------------------------------------------------------------
+# air_temp: 空气温度（数值型变量）
+# soil_moisture: 土壤湿度（数值型变量）
+# leafless_patch_number: 非叶片斑块数量（数值型变量）
+# mean_leafless_patch_area: 非叶片斑块平均面积（数值型变量）
+# total_leafless_patch_area: 非叶片斑块总面积（数值型变量）
+# treatment: 实验处理（因子型变量，干旱处理（drought）或对照处理（control））
+# year:年份（因子型变量）
+# season: 水文季节（因子型变量，湿季或干季）
+# month: 月份（因子型变量）
+# block: 实验样方区组（因子型变量，作为随机效应）
+# date: 日期（数值型变量，作为随机效应）
+
+# 线性混合模型构建 ---------------------------------------------------------------------------------------------
+# 空气温度分析
+model_air <- lmer(
+  air_temp ~ drought * (year + season + month) +  # 固定效应：干旱与时间的交互作用
+  (1 | block) + (1 | date),  # 随机效应：实验样方区组和日期
+  data = data,
+  REML = TRUE)
+
+# 土壤湿度分析
+model_soil <- lmer(
+  soil_moisture ~ drought * (year + season + month) +
+  (1 | block) + (1 | date),
+  data = data,
+  REML = TRUE)
+
+# 非叶片斑块数量分析
+model_number <- lmer(
+  leafless_patch_number ~ drought * (year + season + month) +
+  (1 | block) + (1 | date),
+  data = data,
+  REML = TRUE)
+
+# 非叶片斑块平均面积分析
+model_mean_area <- lmer(
+  mean_leafless_patch_area ~ drought * (year + season + month) +
+  (1 | block) + (1 | date),
+  data = data,
+  REML = TRUE)
+
+# 非叶片斑块总面积分析
+model_total_area <- lmer(
+  total_leafless_patch_area ~ drought * (year + season + month) +
+  (1 | block) + (1 | date),
+  data = data,
+  REML = TRUE)
+
+# 显著性检验，使用III型方差分析（Type III ANOVA） ----------------------------------------------
+Anova(model_air, type = "III")
+Anova(model_soil, type = "III")
+Anova(model_number, type = "III")
+Anova(model_mean_area, type = "III")
+Anova(model_total_area, type = "III")
+
+2. 使用线性混合模型检验冠层不同叶片物候期对干旱的响应，干旱处理为固定效应，实验样方区组和年份为随机效应。
+
+# 加载必要的R包 -----------------------------------------------------------------------------------------------
+library(lme4)
+library(lmerTest)
+library(car)
+
+# 数据结构 ---------------------------------------------------------------------------------------------------------
+# phenology: 物候期（数值型变量，如开始和结束展叶的时间、开始和结束落叶的时间）
+# treatment: 实验处理（因子型变量，干旱处理（drought）或对照处理（control））
+# year: 观测年份（因子型变量，作为随机效应）
+# block: 实验样方区组（因子型变量，作为随机效应）
+
+# 线性混合模型构建 ---------------------------------------------------------------------------------------------
+model <- lmer(
+  phenology ~ treatment +  # 固定效应：干旱处理
+  (1 | block) + (1 | year),  # 随机效应：实验样方区组和年份
+  data = data,
+  REML = TRUE)
+
+# 显著性检验，使用III型方差分析（Type III ANOVA） ----------------------------------------------
+Anova(model, type = "III")
+
+3 使用线性混合模型探究干旱处理在不同水文季节内对叶片性状的影响，干旱处理和水文季节为固定效应，且二者的交互效应也被纳入到模型当中，实验样方区组和采样日期为随机效应。
+
+# 加载必要的R包 -----------------------------------------------------------------------------------------------
+library(lme4)
+library(lmerTest)
+library(car)
+
+# 数据结构 ---------------------------------------------------------------------------------------------------------
+# leaf_number: 叶片数量（数值型变量）
+# leaf_area: 叶片面积（数值型变量）
+# leaf_chlorophyll: 叶片叶绿素含量（数值型变量）
+# treatment: 实验处理（因子型变量，干旱处理（drought）或对照处理（control））
+# season: 水文季节（因子型变量，湿季或干季）
+# block: 实验样方区组（因子型变量，作为随机效应）
+# date: 日期（数值型变量，作为随机效应）
+
+# 线性混合模型构建 ---------------------------------------------------------------------------------------------
+## 叶片数量分析
+model_number <- lmer(
+  leaf_number ~ treatment * season + # 固定效应：干旱与水文季节的交互作用
+  (1 | block) + (1 | date),  # 随机效应：实验样方区组和日期
+  data = data,
+  REML = TRUE)
+
+## 叶片面积分析
+model_area <- lmer(
+  leaf_area ~ treatment * season +
+  (1 | block) + (1 | date),
+  data = data,
+  REML = TRUE)
+
+## 叶片叶绿素含量分析
+model_chlorophyll <- lmer(
+  leaf_chlorophyll ~ treatment * season +
+  (1 | block) + (1 | date),
+  data = data,
+  REML = TRUE)
+
+# 显著性检验，使用III型方差分析（Type III ANOVA） ----------------------------------------------
+Anova(model_number, type = "III")
+Anova(model_area, type = "III")
+Anova(model_chlorophyll, type = "III")
+
+4. 使用结构方程模型探究干旱如何通过影响叶片性状进而影响冠层结构。
+
+# 加载必要的R包 -----------------------------------------------------------------------------------------------
+library(lavaan)
+
+# 数据结构 ---------------------------------------------------------------------------------------------------------
+# treatment: 实验处理（因子型变量，干旱处理（drought）或对照处理（control））
+# leaf_number: 叶片数量（数值型变量）
+# leaf_area: 叶片面积（数值型变量）
+# leaf_chlorophyll: 叶片叶绿素含量（数值型变量）
+# leafless_patch_number: 非叶片斑块数量（数值型变量）
+# mean_leafless_patch_area: 非叶片斑块平均面积（数值型变量）
+# total_leafless_patch_area: 非叶片斑块总面积（数值型变量）
+
+# 定义SEM模型-------------------------------------------------------------------------------------------------
+model="
+# 路径模型
+  leaf_number ~ treatment
+  leaf_area ~ treatment
+  leaf_chlorophyll ~ treatment
+  leafless_patch_number ~ leaf_number + leaf_area + leaf_chlorophyll
+  mean_leafless_patch_area ~ leaf_number + leaf_area + leaf_chlorophyll
+  total_leafless_patch_area ~ leafless_patch_number + mean_leafless_patch_area
+# 变量之间的协方差
+  leaf_number ~~ leaf_area
+  leaf_number ~~ leaf_chlorophyll
+  leaf_area ~~ leaf_chlorophyll
+  leafless_patch_number ~~ mean_leafless_patch_area
+  total_leafless_patch_area ~~ leafless_patch_number
+  total_leafless_patch_area ~~ mean_leafless_patch_area
+  "
+
+# 拟合SEM模型并查看拟合结果-----------------------------------------------------------------------------
+fit <- sem(model, data = data)
+summary(fit, fit.measures = TRUE, standardized = TRUE)
+
+第四章
+1. 使用线性混合模型分析干旱处理对林下层空气温度、土壤湿度、太阳短波辐射和林下层植物叶片物候的影响，干旱处理为固定效应，实验样方区组和年份为随机效应。
+
+# 加载必要的R包 -----------------------------------------------------------------------------------------------
+library(lme4)
+library(lmerTest)
+library(car)
+
+# 数据结构 ---------------------------------------------------------------------------------------------------------
+# air_temp: 空气温度（数值型变量）
+# soil_moisture: 土壤湿度（数值型变量）
+# shortwave_radiation: 太阳短波辐射（数值型变量）
+# phenology: 物候期（数值型变量，如开始和结束展叶的时间、开始和结束落叶的时间）
+# treatment: 实验处理（因子型变量，干旱处理（drought）或对照处理（control））
+# year: 观测年份（因子型变量，作为随机效应）
+# block: 实验样方区组（因子型变量，作为随机效应）
+
+# 线性混合模型构建 ---------------------------------------------------------------------------------------------
+# 空气温度分析
+model_air <- lmer(
+  air_temp ~ treatment +  # 固定效应：干旱处理
+  (1 | block) + (1 | year),  # 随机效应：实验样方区组和年份
+  data = data,
+  REML = TRUE)
+
+# 土壤湿度分析
+model_soil <- lmer(
+  soil_moisture ~ treatment +
+  (1 | block) + (1 | year),
+  data = data,
+  REML = TRUE)
+
+# 太阳短波辐射分析
+model_ radiation <- lmer(
+  shortwave_radiation ~ treatment +
+  (1 | block) + (1 | year),
+  data = data,
+  REML = TRUE)
+
+# 太阳短波辐射分析
+model_ phenology <- lmer(
+  phenology ~ treatment +
+  (1 | block) + (1 | year),
+  data = data,
+  REML = TRUE)
+
+# 显著性检验，使用III型方差分析（Type III ANOVA） ----------------------------------------------
+Anova(model_air, type = "III")
+Anova(model_soil, type = "III")
+Anova(model_ radiation, type = "III")
+Anova(model_ phenology, type = "III")
+
+2. 采用偏相关分析的方法探究林下层植物物候期与季前环境因子和生物因子（前一个物候期）之间的关系。采用多元线性回归分析来探讨林下层植物叶片物候与季前土壤湿度和季前空气温度之间的关系。
+
+# 加载必要的R包 -----------------------------------------------------------------------------------------------
+library(ggm)
+
+# 数据结构 ---------------------------------------------------------------------------------------------------------
+# pre_season_air_temp: 季前空气温度（数值型变量）
+# pre_season_soil_moisture: 季前土壤湿度（数值型变量）
+# pre_season_shortwave_radiation: 季前太阳短波辐射（数值型变量）
+# pre_season_phenology: 前一个季节的物候期（数值型变量）
+# pre_season_accumulated_air_temp: 季前累积空气温度（数值型变量）
+# phenology: 物候期（数值型变量，如开始和结束展叶的时间、开始和结束落叶的时间）
+
+# 偏向关分析 ------------------------------------------------------------------------------------------------------
+partial_cor <- pcor(data[, c("phenology", "pre_season_air_temp", "pre_season_soil_moisture", "pre_season_shortwave_radiation", "pre_season_ phenology")])
+
+# 多元线性回归分析 ---------------------------------------------------------------------------------------------
+# 季前平均空气温度与平均土壤湿度
+model_averaged_air_temp <- lm(phenology ~ pre_season_air_temp + pre_season_soil_moisture, data = data)
+
+# 季前累积空气温度与平均土壤湿度
+model_ accumulated_air_temp <- lm(phenology ~ pre_season_accumulated_air_temp + pre_season_soil_moisture, data = data)
+
+# 查看多元线性回归结果
+summary(model_averaged_air_temp)
+summary(model_ accumulated_air_temp)
+
+第五章
+1. 利用线性混合模型分析干旱处理对冠层和林下层植物绿度GCC的影响，干旱处理、水文季节及其交互作用为固定效应，实验样方区组和日期为随机效应。
+
+# 加载必要的R包 -----------------------------------------------------------------------------------------------
+library(lme4)
+library(lmerTest)
+library(car)
+
+# 数据结构 ---------------------------------------------------------------------------------------------------------
+# canopy_GCC: 冠层绿度（数值型变量）
+# understory_GCC: 林下层绿度（数值型变量）
+# treatment: 实验处理（因子型变量，干旱处理（drought）或对照处理（control））
+# season: 水文季节（因子型变量，湿季或干季）
+# block: 实验样方区组（因子型变量，作为随机效应）
+# date: 日期（数值型变量，作为随机效应）
+
+# 线性混合模型构建 ---------------------------------------------------------------------------------------------
+# 冠层绿度
+model_canopy_GCC <- lmer(
+  canopy_GCC ~ treatment * season +  # 固定效应：干旱与水文季节的交互作用
+  (1 | block) + (1 | date),  # 随机效应：实验样方区组和日期
+  data = data,
+  REML = TRUE)
+
+# 林下层绿度
+model_understory_GCC <- lmer(
+  understory_GCC ~ treatment * season +
+  (1 | block) + (1 | date),
+  data = data,
+  REML = TRUE)
+
+# 显著性检验，使用III型方差分析（Type III ANOVA） ----------------------------------------------
+Anova(model_canopy_GCC, type = "III")
+Anova(model_understory_GCC, type = "III")
+
+为阐明冠层和林下层植物对干旱的差异性响应机制，首先使用结构方程模型（Structural equation model, SEM）探究了土壤水分特征对植物绿度的驱动作用；随后采用冗余分析（Redundancy analysis，RDA）检验了环境因子（温度、降水、土壤水分、光照等）和生物因子（层间关系）对冠层和林下层植物绿度响应干旱的驱动作用；然后运用相对重要性分析量化了各因素的贡献（Ping et al., 2023）。
+
+2. 使用结构方程模型探究土壤水分特征对植物绿度的驱动作用。
+
+# 加载必要的R包 -----------------------------------------------------------------------------------------------
+library(lavaan)
+
+# 数据结构 ---------------------------------------------------------------------------------------------------------
+# treatment: 实验处理（因子型变量，干旱处理（drought）或对照处理（control））
+# soil_water_availability: 土壤水分有效性（数值型变量）
+# soil_water_variability: 土壤水分变异性（数值型变量）
+# pre_season_soil_water_availability: 前一个水文季节的土壤水分有效性（数值型变量）
+# pre_season_soil_water_variability: 前一个水文季节的土壤水分变异性（数值型变量）
+# canopy_GCC: 冠层绿度（数值型变量）
+# understory_GCC: 林下层绿度（数值型变量）
+
+# 定义SEM模型-------------------------------------------------------------------------------------------------
+model="
+# 路径模型
+  soil_water_availability ~ treatment
+  soil_water_ variability ~ treatment
+  pre_season_soil_water_availability ~ treatment
+  pre_season_soil_water_variability ~ treatment
+  canopy_GCC ~ soil_water_availability + soil_water_ variability + pre_season_soil_water_availability + pre_season_soil_water_variability
+  understory_GCC ~ soil_water_availability + soil_water_ variability + pre_season_soil_water_availability + pre_season_soil_water_variability
+# 变量之间的协方差
+  soil_water_availability ~~ pre_season_soil_water_availability
+  soil_water_ variability ~~ pre_season_soil_water_variability
+  soil_water_availability ~~ pre_season_soil_water_variability
+  soil_water_ variability ~~ pre_season_soil_water_availability
+  "
+
+# 拟合SEM模型并查看拟合结果-----------------------------------------------------------------------------
+fit <- sem(model, data = data)
+summary(fit, fit.measures = TRUE, standardized = TRUE)
+
+3. 采用冗余分析检验环境因子（温度、降水、土壤水分、光照等）和生物因子（层间关系）对冠层和林下层植物绿度响应干旱的驱动作用，然后运用相对重要性分析量化了各因素的贡献。
+
+# 加载必要的R包 -----------------------------------------------------------------------------------------------
+library(vegan)
+library(relaimpo)
+
+# 数据结构 ---------------------------------------------------------------------------------------------------------
+# temperature: 温度（数值型变量）
+# precipitation: 降水（数值型变量）
+# canopy_shortwave_radiation: 冠层短波辐射（数值型变量）
+# understory_shortwave_radiation: 林下层短波辐射（数值型变量）
+# soil_water_availability: 土壤水分有效性（数值型变量）
+# soil_water_variability: 土壤水分变异性（数值型变量）
+# Δunderstory_shortwave_radiation: 干旱处理导致的林下层短波辐射变化（数值型变量）
+# Δsoil_water_availability: 干旱处理导致的土壤水分有效性变化（数值型变量）
+# Δsoil_water_variability: 干旱处理导致的土壤水分变异性变化（数值型变量）
+# Δcanopy_GCC: 干旱处理导致的冠层绿度变化（数值型变量）
+# Δunderstory_GCC: 干旱处理导致的林下层绿度变化（数值型变量）
+# Δseedling_GCC: 干旱处理导致的林下层幼苗绿度变化（数值型变量）
+# Δshrub_GCC: 干旱处理导致的林下层灌木绿度变化（数值型变量）
+# Δfern_GCC: 干旱处理导致的林下层蕨类绿度变化（数值型变量）
+# season: 水文季节（因子型变量，湿季或干季）
+
+# 提取自变量-------------------------------------------------------------------------------------------------------
+explanatory_data <- data[, c("temperature", "precipitation", "canopy_shortwave_radiation", "understory_shortwave_radiation", "soil_water_availability", "soil_water_variability", "Δunderstory_shortwave_radiation", "Δsoil_water_availability", "Δsoil_water_variability", "Δseedling_GCC", "Δshrub_GCC", "Δfern_GCC")]
+
+# 提取响应变量变量----------------------------------------------------------------------------------------------
+response_data <- data[, c("Δcanopy_GCC", "Δunderstory_GCC")]
+
+# 进行冗余分析----------------------------------------------------------------------------------------------------
+rda_result <- rda(response_data ~ ., data = explanatory_data)
+
+# 查看冗余分析结果----------------------------------------------------------------------------------------------
+summary(rda_result)
+
+# 相对重要性分析-------------------------------------------------------------------------------------------------
+# 冠层GCC
+lm_model_canopy <- lm(Δcanopy_GCC ~ temperature + precipitation + canopy_shortwave_radiation + soil_water_availability + soil_water_variability+ Δseedling_GCC + Δshrub_GCC + Δfern_GCC + season, data = data)
+relative_importance_canopy <- calc.relimp(lm_model_canopy, type = c("lmg"))
+
+# 林下层GCC
+lm_model_understory <- lm(Δunderstory_GCC ~ temperature + precipitation + understory_shortwave_radiation +Δunderstory_shortwave_radiation+soil_water_availability + soil_water_variability+ Δcanopy_GCC + season, data = data)
+relative_importance_understory <- calc.relimp(lm_model_understory, type = c("lmg"))
+
+# 查看相对重要性结果
+summary(relative_importance_canopy)
+summary(relative_importance_understory)
 
